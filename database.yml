@@ -1,0 +1,12 @@
+---
+development:
+  dialect: "sqlite3"
+  database: /Users/maxm/go/src/github.com/maxmcd/buff_buff_development.sqlite
+
+test:
+  dialect: "sqlite3"
+  database: /Users/maxm/go/src/github.com/maxmcd/buff_buff_test.sqlite
+
+production:
+  dialect: "sqlite3"
+  database: /Users/maxm/go/src/github.com/maxmcd/buff_buff_production.sqlite
