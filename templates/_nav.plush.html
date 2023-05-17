@@ -1,0 +1,18 @@
+<div class="row header space-between">
+  <div>
+    <a href="/" class="logo">steady.sh</a>
+  </div>
+  <div class="align-right">
+    <%= app %>
+    <%= user.Username %>
+    <%= if (user != nil) { %>
+    <% } %>
+    {{ if .LoggedIn }}
+    <a href="/@{{ .user.Username }}">profile</a>
+    -
+    <a href="/logout">logout</a>
+    {{ else }}
+    <a href="/login">login / signup</a>
+    {{ end }}
+  </div>
+</div>

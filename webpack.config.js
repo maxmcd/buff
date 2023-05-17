@@ -7,81 +7,98 @@ const TerserPlugin = require("terser-webpack-plugin");
 const LiveReloadPlugin = require("webpack-livereload-plugin");
 
 const configurator = {
-  entries: function(){
+  entries: function () {
     var entries = {
-      application: [
-        './assets/css/application.scss',
-      ],
-    }
+      application: ["./assets/css/application.scss"],
+    };
 
     Glob.sync("./assets/*/*.*").forEach((entry) => {
-      if (entry === './assets/css/application.scss') {
-        return
+      if (entry === "./assets/css/application.scss") {
+        return;
       }
 
-      let key = entry.replace(/(\.\/assets\/(src|js|css|go)\/)|\.(ts|js|s[ac]ss|go)/g, '')
-      if(key.startsWith("_") || (/(ts|js|s[ac]ss|go)$/i).test(entry) == false) {
-        return
+      let key = entry.replace(
+        /(\.\/assets\/(src|js|css|go)\/)|\.(ts|js|s[ac]ss|go)/g,
+        ""
+      );
+      if (key.startsWith("_") || /(ts|js|s[ac]ss|go)$/i.test(entry) == false) {
+        return;
       }
 
-      if( entries[key] == null) {
-        entries[key] = [entry]
-        return
+      if (entries[key] == null) {
+        entries[key] = [entry];
+        return;
       }
 
-      entries[key].push(entry)
-    })
-    return entries
+      entries[key].push(entry);
+    });
+    return entries;
   },
 
   plugins() {
     var plugins = [
-      new Webpack.ProvidePlugin({
-        $: "jquery",
-        jQuery: "jquery"
-      }),
-      new MiniCssExtractPlugin({filename: "[name].[contenthash].css"}),
+      new MiniCssExtractPlugin({ filename: "[name].[contenthash].css" }),
       new CopyWebpackPlugin({
-        patterns: [{
-          from: "./assets",
-          globOptions: {
-            ignore: [
-              "**/assets/css/**",
-              "**/assets/js/**",
-              "**/assets/src/**",
-            ]
-          }
-        }],
+        patterns: [
+          {
+            from: "./assets",
+            globOptions: {
+              ignore: [
+                "**/assets/css/**",
+                "**/assets/js/**",
+                "**/assets/src/**",
+              ],
+            },
+          },
+        ],
       }),
-      new Webpack.LoaderOptionsPlugin({minimize: true,debug: false}),
-      new WebpackManifestPlugin({fileName: "manifest.json",publicPath: ""})
+      new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: "./node_modules/bun-types/types.d.ts",
+          },
+        ],
+      }),
+      new Webpack.LoaderOptionsPlugin({ minimize: true, debug: false }),
+      new WebpackManifestPlugin({ fileName: "manifest.json", publicPath: "" }),
     ];
 
-    return plugins
+    return plugins;
   },
 
-  moduleOptions: function() {
+  moduleOptions: function () {
     return {
       rules: [
         {
           test: /\.s[ac]ss$/,
           use: [
             MiniCssExtractPlugin.loader,
-            { loader: "css-loader", options: {sourceMap: true}},
-            { loader: "postcss-loader", options: {sourceMap: true}},
-            { loader: "sass-loader", options: {sourceMap: true}}
-          ]
+            { loader: "css-loader", options: { sourceMap: true } },
+            { loader: "postcss-loader", options: { sourceMap: true } },
+            { loader: "sass-loader", options: { sourceMap: true } },
+          ],
         },
-        { test: /\.tsx?$/, use: "ts-loader", exclude: /node_modules/},
-        { test: /\.jsx?$/,loader: "babel-loader",exclude: /node_modules/ },
-        { test: /\.(woff|woff2|ttf|svg)(\?v=\d+\.\d+\.\d+)?$/,use: "url-loader"},
-        { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,use: "file-loader" },
-        { test: /\.go$/, use: "gopherjs-loader"}
-      ]
-    }
+        {
+          test: /\.css$/,
+          use: [
+            MiniCssExtractPlugin.loader,
+            { loader: "css-loader", options: { sourceMap: true } },
+            { loader: "postcss-loader", options: { sourceMap: true } },
+          ],
+        },
+        { test: /\.tsx?$/, use: "ts-loader", exclude: /node_modules/ },
+        { test: /\.jsx?$/, loader: "babel-loader", exclude: /node_modules/ },
+        {
+          test: /\.(woff|woff2|ttf|svg)(\?v=\d+\.\d+\.\d+)?$/,
+          use: "url-loader",
+        },
+        { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, use: "file-loader" },
+        { test: /\.go$/, use: "gopherjs-loader" },
+      ],
+    };
   },
 
-  buildConfig: function(){
+  buildConfig: function () {
     // NOTE: If you are having issues with this not being set "properly", make
     // sure your GO_ENV is set properly as `buffalo build` overrides NODE_ENV
     // with whatever GO_ENV is set to or "development".
@@ -89,7 +106,14 @@ const configurator = {
 
     var config = {
       mode: env,
-      entry: configurator.entries(),
+      entry: {
+        "editor.worker": "monaco-editor/esm/vs/editor/editor.worker.js",
+        "json.worker": "monaco-editor/esm/vs/language/json/json.worker",
+        "css.worker": "monaco-editor/esm/vs/language/css/css.worker",
+        "html.worker": "monaco-editor/esm/vs/language/html/html.worker",
+        "ts.worker": "monaco-editor/esm/vs/language/typescript/ts.worker",
+        ...configurator.entries(),
+      },
       output: {
         filename: "[name].[contenthash].js",
         path: `${__dirname}/public/assets`,
@@ -98,34 +122,34 @@ const configurator = {
       plugins: configurator.plugins(),
       module: configurator.moduleOptions(),
       resolve: {
-        extensions: ['.ts', '.js', '.json']
-      }
-    }
+        extensions: [".ts", ".js", ".json"],
+      },
+    };
 
-    if( env === "development" ){
-      config.plugins.push(new LiveReloadPlugin({appendScriptTag: true}))
-      return config
+    if (env === "development") {
+      config.plugins.push(new LiveReloadPlugin({ appendScriptTag: true }));
+      return config;
     }
 
     const terser = new TerserPlugin({
       terserOptions: {
         compress: {},
         mangle: {
-          keep_fnames: true
+          keep_fnames: true,
         },
         output: {
           comments: false,
         },
       },
       extractComments: false,
-    })
+    });
 
     config.optimization = {
-      minimizer: [terser]
-    }
+      minimizer: [terser],
+    };
 
-    return config
-  }
-}
+    return config;
+  },
+};
 
-module.exports = configurator.buildConfig()
+module.exports = configurator.buildConfig();
